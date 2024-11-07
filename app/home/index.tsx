@@ -20,6 +20,7 @@ import ImagesGrid from "@/components/imagesGrid";
 import { debounce } from "lodash";
 
 const Home = () => {
+  let page;
   const { top } = useSafeAreaInsets();
   const paddingTop = top > 0 ? top + 10 : 30;
   const searchInputRef = useRef<TextInput>(null);
@@ -28,7 +29,17 @@ const Home = () => {
   const [images, setImages] = useState<any>([]);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
 
-  const handleChangeCategory = (cat: string | null) => [setActiveCategory(cat)];
+  const handleChangeCategory = (cat: string | null) => {
+    setActiveCategory(cat);
+    clearSearch();
+    setImages([]);
+    page = 1;
+    let params: any = {
+      page,
+    };
+    if (cat) params.category = cat;
+    fetchImages(params, false);
+  };
 
   useEffect(() => {
     fetchImages();
@@ -53,13 +64,15 @@ const Home = () => {
     setSearch(text);
     if (text.length > 2) {
       //search
-
+      setActiveCategory(null);
+      page = 1;
       setImages([]);
-      fetchImages({ page: 1, q: text });
+      fetchImages({ page, q: text }, false);
     }
     if (text == "") {
       //reset result
       searchInputRef.current?.clear();
+      setActiveCategory(null);
       setImages([]);
       fetchImages({ page: 1 });
     }
@@ -71,7 +84,6 @@ const Home = () => {
 
   const clearSearch = () => {
     setSearch("");
-    handleSearch("rat");
     // searchInputRef.current?.clear();
   };
   useEffect(() => {
