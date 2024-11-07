@@ -1,7 +1,7 @@
 const API_KEY = "46895701-b1f5ec3d3a5ef61339eee2858";
 const apiUrl = `https://pixabay.com/api/?key=${API_KEY}`;
 
-export const apiCall = async ({ params }: any) => {
+export const apiCall = async (params: any) => {
   try {
     const res = await fetch(formatUrl(params));
     const data = await res.json();
@@ -12,14 +12,17 @@ export const apiCall = async ({ params }: any) => {
   }
 };
 
-function formatUrl(params: any): string | URL | Request {
-  let url = apiUrl + "&per_page=25&safesearch=true&editors_choice=true";
-  if (!params) return url;
-  let paramKeys = Object.keys(params);
-  paramKeys.map((key) => {
-    let value = key == "1" ? encodeURIComponent(params[key]) : params[key];
-    url += `&${key}=${value}`;
-  });
-  console.log("final url: ", url);
+function formatUrl(params: any): string {
+  // Start with the base URL and default parameters
+  let url = `${apiUrl}&per_page=25&safesearch=true&editors_choice=true`;
+
+  if (params) {
+    // Add each param as a URL parameter, encoding the 'q' (query) value
+    Object.keys(params).forEach((key) => {
+      const value = key === "q" ? encodeURIComponent(params[key]) : params[key];
+      url += `&${key}=${value}`;
+    });
+  }
+
   return url;
 }

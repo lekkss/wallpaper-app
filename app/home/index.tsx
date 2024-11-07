@@ -8,7 +8,7 @@ import {
   TextInputChangeEventData,
   View,
 } from "react-native";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather, FontAwesome6, Ionicons } from "@expo/vector-icons";
 import { theme } from "@/constants/theme";
@@ -16,8 +16,8 @@ import { hp, wp } from "@/helpers/common";
 import { setStatusBarStyle } from "expo-status-bar";
 import Categories from "@/components/categories";
 import { apiCall } from "@/api";
-import { data } from "@/constants/data";
 import ImagesGrid from "@/components/imagesGrid";
+import { debounce } from "lodash";
 
 const Home = () => {
   const { top } = useSafeAreaInsets();
@@ -33,8 +33,13 @@ const Home = () => {
   useEffect(() => {
     fetchImages();
   }, []);
-  const fetchImages = async (params = { page: 1 }, append = false) => {
-    let res = await apiCall(params);
+  const fetchImages = async (params = {}, append = false) => {
+    // Merge provided params with default params
+    const finalParams = { page: 1, ...params };
+
+    console.log("Final params: ", finalParams, "Append:", append);
+
+    let res = await apiCall(finalParams);
     if (res.success && res.data.hits) {
       if (append) {
         setImages([...images, ...res.data?.hits]);
@@ -42,6 +47,32 @@ const Home = () => {
         setImages([...res.data?.hits]);
       }
     }
+  };
+  const handleSearch = (text: string) => {
+    console.log("Seraching for: ", text);
+    setSearch(text);
+    if (text.length > 2) {
+      //search
+
+      setImages([]);
+      fetchImages({ page: 1, q: text });
+    }
+    if (text == "") {
+      //reset result
+      searchInputRef.current?.clear();
+      setImages([]);
+      fetchImages({ page: 1 });
+    }
+  };
+  const handleDebounce = useCallback(
+    debounce((text: string) => handleSearch(text), 400),
+    []
+  );
+
+  const clearSearch = () => {
+    setSearch("");
+    handleSearch("rat");
+    // searchInputRef.current?.clear();
   };
   useEffect(() => {
     setTimeout(() => {
@@ -76,15 +107,16 @@ const Home = () => {
           </View>
           <TextInput
             ref={searchInputRef}
-            value={search}
-            onChange={(value: NativeSyntheticEvent<TextInputChangeEventData>) =>
-              setSearch(value.nativeEvent.text)
-            }
+            // value={search}
+            onChangeText={handleDebounce}
             style={styles.searchInput}
             placeholder="Search for photos.."
           />
           {search && (
-            <Pressable style={styles.closeIcon}>
+            <Pressable
+              style={styles.closeIcon}
+              onPress={() => handleSearch("")}
+            >
               <Ionicons
                 name="close"
                 size={24}

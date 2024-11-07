@@ -1,6 +1,8 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import React from "react";
 import { Image } from "expo-image";
+import { getImageSize, wp } from "@/helpers/common";
+import { theme } from "@/constants/theme";
 
 const ImageCard = ({
   image,
@@ -11,13 +13,19 @@ const ImageCard = ({
   index: number;
   columns: number;
 }) => {
+  const getDynamicHeight = () => {
+    let { imageHeight: height, imageWidth: width } = image;
+    return { height: getImageSize({ height, width }) };
+  };
+  const isLastRow = () => {
+    return (index + 1) % columns === 0;
+  };
   return (
-    <Pressable>
+    <Pressable style={[styles.imageWrapper, !isLastRow() && styles.spacing]}>
       <Image
-        style={styles.image}
+        style={[styles.image, getDynamicHeight()]}
         source={{ uri: image?.webformatURL }}
-        contentFit="cover"
-        transition={1000}
+        transition={100}
       />
     </Pressable>
   );
@@ -26,8 +34,19 @@ const ImageCard = ({
 export default ImageCard;
 
 const styles = StyleSheet.create({
+  imageWrapper: {
+    backgroundColor: theme.colors.grayBg,
+    borderRadius: theme.radius.xl,
+    overflow: "hidden",
+    borderCurve: "continuous",
+    marginBottom: wp(2),
+  },
   image: {
     height: 300,
     width: "100%",
+  },
+  spacing: {
+    marginRight: wp(2),
+    marginBottom: wp(2),
   },
 });

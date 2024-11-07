@@ -14,7 +14,7 @@ const ImagesGrid = ({ images }: any) => {
         estimatedItemSize={200}
         numColumns={columns}
         renderItem={({ item, index }) => (
-          <ImageCard image={item} index={index} columns={columns}/>
+          <ImageCard image={item} index={index} columns={columns} />
         )}
       />
     </View>
