@@ -1,5 +1,7 @@
 import {
   ActivityIndicator,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -21,11 +23,13 @@ import FiltersModal from "@/components/filtersModal";
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
 
 const Home = () => {
-  let page;
+  let page: number = 1;
   const { top } = useSafeAreaInsets();
   const paddingTop = top > 0 ? top + 10 : 30;
   const searchInputRef = useRef<TextInput>(null);
+  const scrollRef = useRef<ScrollView>(null);
 
+  const [isEndReached, setIsEndReached] = useState(false);
   const [search, setSearch] = useState<string>("");
   const [filters, setFilters] = useState<any | null>();
   const [images, setImages] = useState<any>([]);
@@ -47,7 +51,7 @@ const Home = () => {
   useEffect(() => {
     fetchImages();
   }, []);
-  const fetchImages = async (params = {}, append = false) => {
+  const fetchImages = async (params = {}, append = true) => {
     // Merge provided params with default params
     const finalParams = { page: 1, ...params };
 
@@ -151,11 +155,43 @@ const Home = () => {
     fetchImages(params, false);
   };
 
+  const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const contentHeight = event.nativeEvent.contentSize.height;
+    const scrollViewHeught = event.nativeEvent.layoutMeasurement.height;
+    const scrollOffset = event.nativeEvent.contentOffset.y;
+    const bottomPosition = contentHeight - scrollViewHeught;
+
+    if (scrollOffset >= bottomPosition - 1) {
+      if (!isEndReached) {
+        setIsEndReached(true);
+        console.log("Reached bottom");
+        //fetch more images
+        ++page;
+        let params = {
+          page,
+          ...filters,
+        };
+        if (activeCategory) params.category = activeCategory;
+        if (search) params.q = search;
+        fetchImages(params, true);
+      }
+    } else if (isEndReached) {
+      setIsEndReached(false);
+    }
+  };
+
+  const handleScrollUp = () => {
+    scrollRef?.current?.scrollTo({
+      y: 0,
+      animated: true,
+    });
+  };
+
   return (
     <View style={[styles.container, { paddingTop }]}>
       {/* Header */}
       <View style={styles.header}>
-        <Pressable>
+        <Pressable onPress={handleScrollUp}>
           <Text style={styles.title}>Pixels</Text>
         </Pressable>
         <Pressable onPress={openFilterModal}>
@@ -167,7 +203,12 @@ const Home = () => {
         </Pressable>
       </View>
       {/*  */}
-      <ScrollView contentContainerStyle={{ gap: 15 }}>
+      <ScrollView
+        contentContainerStyle={{ gap: 15 }}
+        onScroll={handleScroll}
+        scrollEventThrottle={5}
+        ref={scrollRef}
+      >
         {/* Search Bar */}
         <View style={styles.searchBar}>
           <View style={styles.searchIcon}>
