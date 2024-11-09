@@ -21,6 +21,7 @@ import ImagesGrid from "@/components/imagesGrid";
 import { debounce } from "lodash";
 import FiltersModal from "@/components/filtersModal";
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
+import { useRouter } from "expo-router";
 
 const Home = () => {
   let page: number = 1;
@@ -29,6 +30,7 @@ const Home = () => {
   const searchInputRef = useRef<TextInput>(null);
   const scrollRef = useRef<ScrollView>(null);
 
+  const router = useRouter();
   const [isEndReached, setIsEndReached] = useState(false);
   const [search, setSearch] = useState<string>("");
   const [filters, setFilters] = useState<any | null>();
@@ -285,7 +287,9 @@ const Home = () => {
           </View>
         )}
         {/* images mansory */}
-        <View>{images.length > 0 && <ImagesGrid images={images} />}</View>
+        <View>
+          {images.length > 0 && <ImagesGrid images={images} router={router} />}
+        </View>
         {/* loaidng */}
         <View
           style={{ marginBottom: 70, marginTop: images.length > 0 ? 10 : 70 }}

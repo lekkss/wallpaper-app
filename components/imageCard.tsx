@@ -3,15 +3,18 @@ import React from "react";
 import { Image } from "expo-image";
 import { getImageSize, wp } from "@/helpers/common";
 import { theme } from "@/constants/theme";
+import { Router } from "expo-router";
 
 const ImageCard = ({
   image,
   index,
   columns,
+  router,
 }: {
   image: any;
   index: number;
   columns: number;
+  router: Router;
 }) => {
   const getDynamicHeight = () => {
     let { imageHeight: height, imageWidth: width } = image;
@@ -21,7 +24,12 @@ const ImageCard = ({
     return (index + 1) % columns === 0;
   };
   return (
-    <Pressable style={[styles.imageWrapper, !isLastRow() && styles.spacing]}>
+    <Pressable
+      style={[styles.imageWrapper, !isLastRow() && styles.spacing]}
+      onPress={() =>
+        router.push({ pathname: "/home/image", params: { ...image } })
+      }
+    >
       <Image
         style={[styles.image, getDynamicHeight()]}
         source={{ uri: image?.webformatURL }}

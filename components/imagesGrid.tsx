@@ -3,8 +3,9 @@ import React from "react";
 import { MasonryFlashList } from "@shopify/flash-list";
 import ImageCard from "./imageCard";
 import { wp, getColumnCount } from "@/helpers/common";
+import { Router } from "expo-router";
 
-const ImagesGrid = ({ images }: any) => {
+const ImagesGrid = ({ images, router }: { images: any; router: Router }) => {
   const columns = getColumnCount();
   return (
     <View style={styles.container}>
@@ -14,7 +15,12 @@ const ImagesGrid = ({ images }: any) => {
         estimatedItemSize={200}
         numColumns={columns}
         renderItem={({ item, index }) => (
-          <ImageCard image={item} index={index} columns={columns} />
+          <ImageCard
+            image={item}
+            index={index}
+            columns={columns}
+            router={router}
+          />
         )}
       />
     </View>
