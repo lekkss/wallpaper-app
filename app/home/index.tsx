@@ -1,4 +1,5 @@
 import {
+  ActivityIndicator,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -26,7 +27,7 @@ const Home = () => {
   const searchInputRef = useRef<TextInput>(null);
 
   const [search, setSearch] = useState<string>("");
-  const [filters, setFilters] = useState(null);
+  const [filters, setFilters] = useState<any | null>();
   const [images, setImages] = useState<any>([]);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
 
@@ -37,6 +38,7 @@ const Home = () => {
     page = 1;
     let params: any = {
       page,
+      ...filters,
     };
     if (cat) params.category = cat;
     fetchImages(params, false);
@@ -65,17 +67,18 @@ const Home = () => {
     setSearch(text);
     if (text.length > 2) {
       //search
-      setActiveCategory(null);
       page = 1;
+      setActiveCategory(null);
       setImages([]);
-      fetchImages({ page, q: text }, false);
+      fetchImages({ page, q: text, ...filters }, false);
     }
     if (text == "") {
+      page = 1;
       //reset result
       searchInputRef.current?.clear();
       setActiveCategory(null);
       setImages([]);
-      fetchImages({ page: 1 });
+      fetchImages({ page, ...filters }, false);
     }
   };
   const handleDebounce = useCallback(
@@ -106,13 +109,46 @@ const Home = () => {
   }, []);
 
   const applyFilters = () => {
-    console.log("applyting filters");
+    if (filters) {
+      page = 1;
+      setImages([]);
+      let params = {
+        page,
+        ...filters,
+      };
+      if (activeCategory) params.category = activeCategory;
+      if (search) params.q = search;
+      fetchImages(params, false);
+    }
     closeFilterModal();
   };
   const resetFilters = () => {
-    console.log("resetting filters");
-    setFilters(null);
+    if (filters) {
+      page = 1;
+      setFilters(null);
+      setImages([]);
+      let params: any = {
+        page,
+      };
+      if (activeCategory) params.category = activeCategory;
+      if (search) params.q = search;
+      fetchImages(params, false);
+    }
     closeFilterModal();
+  };
+
+  const clearThisFilter = (filter: any) => {
+    let filterz = { ...filters };
+    delete filterz[filter];
+    setFilters({ ...filterz });
+    page = 1;
+    let params = {
+      page,
+      ...filterz,
+    };
+    if (activeCategory) params.category = activeCategory;
+    if (search) params.q = search;
+    fetchImages(params, false);
   };
 
   return (
@@ -168,8 +204,53 @@ const Home = () => {
             handleChangeCategory={handleChangeCategory}
           />
         </View>
+        {/* Filters */}
+        {filters && (
+          <View>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.filters}
+            >
+              {Object.keys(filters).map((key, index) => {
+                return (
+                  <View key={key} style={styles.filterItem}>
+                    {key == "colors" ? (
+                      <View
+                        style={{
+                          width: 30,
+                          height: 20,
+                          borderRadius: 7,
+                          backgroundColor: filters[key],
+                        }}
+                      />
+                    ) : (
+                      <Text style={styles.filterItemText}>{filters[key]}</Text>
+                    )}
+                    <Pressable
+                      style={styles.filterCloseIcon}
+                      onPress={() => clearThisFilter(key)}
+                    >
+                      <Ionicons
+                        name="close"
+                        size={14}
+                        color={theme.colors.neutral(0.9)}
+                      />
+                    </Pressable>
+                  </View>
+                );
+              })}
+            </ScrollView>
+          </View>
+        )}
         {/* images mansory */}
         <View>{images.length > 0 && <ImagesGrid images={images} />}</View>
+        {/* loaidng */}
+        <View
+          style={{ marginBottom: 70, marginTop: images.length > 0 ? 10 : 70 }}
+        >
+          <ActivityIndicator size="large" />
+        </View>
       </ScrollView>
       {/* Filers */}
       <FiltersModal
@@ -229,4 +310,25 @@ const styles = StyleSheet.create({
     borderRadius: theme.radius.sm,
   },
   categories: {},
+  filters: {
+    paddingHorizontal: wp(4),
+    gap: 10,
+  },
+  filterItem: {
+    backgroundColor: theme.colors.grayBg,
+    padding: 8,
+    flexDirection: "row",
+    borderRadius: theme.radius.xs,
+    gap: 10,
+    paddingHorizontal: 10,
+    alignItems: "center",
+  },
+  filterItemText: {
+    fontSize: hp(1.9),
+  },
+  filterCloseIcon: {
+    backgroundColor: theme.colors.neutral(0.2),
+    padding: 4,
+    borderRadius: 7,
+  },
 });
