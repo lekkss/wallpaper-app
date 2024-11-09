@@ -1,11 +1,9 @@
 import {
-  NativeSyntheticEvent,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
   TextInput,
-  TextInputChangeEventData,
   View,
 } from "react-native";
 import React, { useCallback, useEffect, useRef, useState } from "react";
@@ -18,6 +16,8 @@ import Categories from "@/components/categories";
 import { apiCall } from "@/api";
 import ImagesGrid from "@/components/imagesGrid";
 import { debounce } from "lodash";
+import FiltersModal from "@/components/filtersModal";
+import { BottomSheetModal } from "@gorhom/bottom-sheet";
 
 const Home = () => {
   let page;
@@ -26,6 +26,7 @@ const Home = () => {
   const searchInputRef = useRef<TextInput>(null);
 
   const [search, setSearch] = useState<string>("");
+  const [filters, setFilters] = useState(null);
   const [images, setImages] = useState<any>([]);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
 
@@ -91,6 +92,29 @@ const Home = () => {
       setStatusBarStyle("dark");
     }, 0);
   }, []);
+
+  // ----Modal-----
+
+  // ref
+  const modalRef = useRef<BottomSheetModal>(null);
+  // callbacks
+  const openFilterModal = useCallback(() => {
+    modalRef.current?.present();
+  }, []);
+  const closeFilterModal = useCallback(() => {
+    modalRef.current?.close();
+  }, []);
+
+  const applyFilters = () => {
+    console.log("applyting filters");
+    closeFilterModal();
+  };
+  const resetFilters = () => {
+    console.log("resetting filters");
+    setFilters(null);
+    closeFilterModal();
+  };
+
   return (
     <View style={[styles.container, { paddingTop }]}>
       {/* Header */}
@@ -98,7 +122,7 @@ const Home = () => {
         <Pressable>
           <Text style={styles.title}>Pixels</Text>
         </Pressable>
-        <Pressable>
+        <Pressable onPress={openFilterModal}>
           <FontAwesome6
             name="bars-staggered"
             size={22}
@@ -147,6 +171,15 @@ const Home = () => {
         {/* images mansory */}
         <View>{images.length > 0 && <ImagesGrid images={images} />}</View>
       </ScrollView>
+      {/* Filers */}
+      <FiltersModal
+        filters={filters}
+        setFilters={setFilters}
+        modalRef={modalRef}
+        closeFilterModal={closeFilterModal}
+        onApply={applyFilters}
+        onReset={resetFilters}
+      />
     </View>
   );
 };

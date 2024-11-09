@@ -21,4 +21,23 @@ const categories: string[] = [
   "music",
 ];
 
-export const data = { categories };
+const filters: any = {
+  order: ["popular", "latest"],
+  orientation: ["horizontal", "vertical"],
+  type: ["photo", "illustration", "vector"],
+  colors: [
+    "red",
+    "orange",
+    "yellow",
+    "green",
+    "turquoise",
+    "blue",
+    "pink",
+    "gray",
+    "black",
+    "brown",
+    "white",
+  ],
+};
+
+export const data = { categories, filters };
