@@ -4,6 +4,7 @@ import {
   Platform,
   Pressable,
   StyleSheet,
+  Text,
   View,
 } from "react-native";
 import React, { useState } from "react";
@@ -16,6 +17,7 @@ import { Entypo, Octicons } from "@expo/vector-icons";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import * as FileSystem from "expo-file-system";
 import * as Sharing from "expo-sharing";
+import Toast from "react-native-toast-message";
 
 const ImageScreen = () => {
   const router = useRouter();
@@ -44,16 +46,30 @@ const ImageScreen = () => {
   };
 
   const handleDownloadImage = async () => {
-    setStatus("downloading");
-    let uri = await downloadFile();
-    if (uri) console.log("image downloaded");
+    if (Platform.OS == "web") {
+      const anchor = document.createElement("a");
+      anchor.href = imageUrl;
+      anchor.target = "_blank";
+      anchor.download = fileName || "download";
+      document.body.appendChild(anchor);
+      anchor.click();
+      document.body.removeChild(anchor);
+    } else {
+      setStatus("downloading");
+      let uri = await downloadFile();
+      if (uri) showToast("image downloaded");
+    }
   };
   const handleShareImage = async () => {
-    setStatus("sharing");
-    let uri = await downloadFile();
-    if (uri) {
-      await Sharing.shareAsync(uri);
-      setStatus("");
+    if (Platform.OS == "web") {
+      showToast("link copied");
+    } else {
+      setStatus("sharing");
+      let uri = await downloadFile();
+      if (uri) {
+        await Sharing.shareAsync(uri);
+        setStatus("");
+      }
     }
   };
   const downloadFile = async () => {
@@ -69,6 +85,25 @@ const ImageScreen = () => {
       return null;
     }
   };
+
+  const showToast = (message: any) => {
+    Toast.show({
+      type: "success",
+      text1: message,
+      position: "bottom",
+    });
+  };
+
+  const toastConfig = {
+    success: ({ text1, prop, ...rest }: any) => {
+      return (
+        <View style={styles.toast}>
+          <Text style={styles.toastText}>{text1}</Text>
+        </View>
+      );
+    },
+  };
+
   return (
     <BlurView tint="dark" intensity={60} style={styles.container}>
       <View style={[getSize()]}>
@@ -113,6 +148,7 @@ const ImageScreen = () => {
           )}
         </Animated.View>
       </View>
+      <Toast config={toastConfig} visibilityTime={2500} />
     </BlurView>
   );
 };
@@ -154,5 +190,18 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255,255,255,0.1)",
     borderRadius: theme.radius.lg,
     borderCurve: "continuous",
+  },
+  toast: {
+    padding: 15,
+    paddingHorizontal: 30,
+    borderRadius: theme.radius.xl,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(255,255,255,0.1)",
+  },
+  toastText: {
+    fontSize: hp(1.8),
+    fontWeight: "600",
+    color: theme.colors.white,
   },
 });
